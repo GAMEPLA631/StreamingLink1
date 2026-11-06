@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StreamFlix 8K - Verejné Globálne Kino & Štúdio</title>
+  <title>StreamFlix 8K - Verejné Kino & 100 Voľných Slotov</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   
-  <!-- ŽIVÉ AKTÍVNE CLOUDOVÉ RELAY UZLY PRE VEREJNÚ SYNCHRONIZÁCIU -->
+  <!-- GLOBÁLNY CLUSTER UZLOV (ZÁLOHA PRE DYNAMICKÉ PRIDÁVANIE) -->
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 
   <style>
@@ -88,7 +88,7 @@
       gap: 10px;
     }
 
-    /* HOSTING BANNER */
+    /* HOSTING INFO BANNER */
     .cloud-banner {
       background: linear-gradient(90deg, #181129, #0e1e24);
       border: 1px solid rgba(0, 240, 255, 0.3);
@@ -100,7 +100,7 @@
       align-items: center;
     }
 
-    /* TOP 10 NETFLIX PREVEDENIE S ČÍSLAMI */
+    /* TOP 10 NETFLIX S VEĽKÝMI ČÍSLAMI */
     .row-container {
       display: flex;
       gap: 25px;
@@ -197,7 +197,7 @@
       width: 100%;
     }
 
-    /* MODÁLY */
+    /* MODÁLNE OKNÁ */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -316,12 +316,11 @@
 </head>
 <body>
 
-  <!-- MONITOR ŽIVÝCH UZLOV -->
+  <!-- MONITOR UZLOV -->
   <div class="db-cluster-hud">
-    <span><span class="db-dot"></span>Uzol 1 (Wallie Peer)</span>
-    <span><span class="db-dot"></span>Uzol 2 (Peer.ooo)</span>
-    <span><span class="db-dot"></span>Uzol 3 (Glitch Sync)</span>
-    <span><span class="db-dot"></span>Verejná Sieť (Online)</span>
+    <span><span class="db-dot"></span>100 HTML Slotov (Online)</span>
+    <span><span class="db-dot"></span>Peer 1 (Wallie)</span>
+    <span><span class="db-dot"></span>Peer 2 (Glitch)</span>
   </div>
 
   <header>
@@ -337,9 +336,9 @@
   <main>
     <div class="cloud-banner">
       <div>
-        <strong>Zverejnenie priameho videa (.mp4 bez html kódu):</strong>
+        <strong>Priame video URL (Získajte odkaz na video):</strong>
         <p style="font-size: 13px; color: #aaa; margin-top: 4px;">
-          Pre priamu URL nahrajte video na <b>Catbox.moe</b> alebo <b>Pixeldrain.com</b>. Odkaz vložte cez tlačidlo "Zverejniť Film". Všetok zverejnený obsah je <b>100 % verejný pre každého</b>.
+          Nahrajte video na <b>Catbox.moe</b> alebo <b>Pixeldrain.com</b>. Odkaz na video a clover môžete vložiť buď cez tlačidlo "Zverejniť Film", alebo <b>priamo vpísať do 100 voľných slotov v kóde</b>.
         </p>
       </div>
       <a href="https://catbox.moe/" target="_blank" class="btn btn-secondary" style="text-decoration:none;">Otvoriť Catbox ↗</a>
@@ -348,7 +347,7 @@
     <!-- SEKCIA 1: TOP 10 NETFLIX S VEĽKÝMI ČÍSLAMI -->
     <h2 class="section-title">Top 10 Filmov Dnes</h2>
     <div class="row-container" id="top10Row">
-      <div class="empty-state">Zatiaľ nie sú nahrané filmy. Kliknite na "Zverejniť Film" a pridajte prvý verejný film!</div>
+      <div class="empty-state">Zatiaľ nie sú zadané filmy. Vyplňte sloty v kóde alebo kliknite na "Zverejniť Film".</div>
     </div>
 
     <!-- SEKCIA 2: VŠETKY OSTATNÉ VIDEÁ -->
@@ -358,7 +357,7 @@
     </div>
   </main>
 
-  <!-- MODAL: STREAMFLIX PAY (SMS OVERENIE & VIP PODPORA) -->
+  <!-- MODAL: STREAMFLIX PAY (SMS OVERENIE) -->
   <div class="modal-overlay" id="plansModal">
     <div class="modal-card">
       <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
@@ -411,7 +410,7 @@
           </div>
         </div>
 
-        <label style="font-size:11px; color:#00f0ff; font-weight:700;">Telefónne číslo na odoslanie overovacej SMS (+421...):</label>
+        <label style="font-size:11px; color:#00f0ff; font-weight:700;">Telefónne číslo na overovaciu SMS (+421...):</label>
         <input type="tel" id="payPhone" placeholder="+421 900 123 456">
       </div>
 
@@ -430,14 +429,9 @@
       <p style="font-size: 13px; color: #ccc; margin: 10px 0;">
         Na číslo <b id="displayTargetPhone" style="color:#00f0ff;"></b> bol odoslaný 6-miestny kód.
       </p>
-
       <div id="smsBackupNotice" style="background:#1f1b2b; border:1px solid #7928ca; padding:10px; border-radius:6px; font-size:12px; color:#00ff88; margin:10px 0; display:none;"></div>
-
       <input type="text" id="enteredSmsCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:6px; font-family:monospace;">
-      
-      <button class="btn btn-rainbow" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="verifySmsCodeAndComplete()">
-        Overiť a potvrdiť VIP aktiváciu
-      </button>
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="verifySmsCodeAndComplete()">Overiť a potvrdiť VIP aktiváciu</button>
       <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="hideModal('smsModal'); showModal('plansModal');">Späť</button>
     </div>
   </div>
@@ -450,7 +444,6 @@
       <input type="text" id="authUsername" placeholder="Prezývka (Username)">
       <input type="email" id="authEmail" placeholder="Emailová adresa">
       <input type="password" id="authPassword" placeholder="Heslo">
-
       <button class="btn btn-rainbow" style="width: 100%; margin-top: 10px; padding: 12px;" onclick="handleLoginFlow()">Prihlásiť sa cez 2× 10s kontrolu</button>
       <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="handleRegisterFlow()">Registrovať & Vygenerovať 14-miestny PIN</button>
       <button class="btn btn-secondary" style="width: 100%; margin-top: 8px; border:none;" onclick="hideModal('authModal')">Zrušiť</button>
@@ -474,7 +467,7 @@
   <div class="modal-overlay" id="scanModal">
     <div class="modal-card">
       <div class="spinner"></div>
-      <h3 id="scanTitle">Fáza 1/2: Hľadáme váš účet vo verejných uzloch...</h3>
+      <h3 id="scanTitle">Fáza 1/2: Hľadáme váš účet v sieti...</h3>
       <p id="scanSub" style="color: #00f0ff; font-size: 13px; margin-top: 8px;">Prebieha overenie (1 / 10s)</p>
     </div>
   </div>
@@ -493,10 +486,9 @@
   <div class="modal-overlay" id="uploadModal">
     <div class="modal-card" style="text-align: left;">
       <h2>Zverejniť verejný film / video</h2>
-      <p style="font-size:11px; color:#aaa; margin-bottom:10px;">Film sa okamžite verejne sprístupní pre všetkých používateľov na celom svete.</p>
       <input type="text" id="newTitle" placeholder="Názov filmu">
       <input type="url" id="newVideoUrl" placeholder="Priama URL videa (napr. https://files.catbox.moe/...mp4 alebo YouTube)">
-      <input type="url" id="newThumbUrl" placeholder="URL obalu (Cover / Miniatúra)">
+      <input type="url" id="newThumbUrl" placeholder="URL obalu (Cover / Clover miniatúra)">
       
       <div style="margin: 10px 0; background: #1a1a23; padding: 12px; border-radius: 6px;">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px;">
@@ -539,7 +531,7 @@
   <div class="modal-overlay" id="playerModal">
     <div class="player-window">
       <div style="background:#111; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333;">
-        <span id="playingTitle" style="font-size:14px; font-weight:700;">Prehráva sa verejné video...</span>
+        <span id="playingTitle" style="font-size:14px; font-weight:700;">Prehráva sa...</span>
         <button class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="closePlayer()">✕ Zavrieť</button>
       </div>
       <div id="playerContainer" style="flex:1; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center;"></div>
@@ -548,57 +540,216 @@
 
   <script>
     /* =====================================================================
-       ŽIVÉ A FUNKČNÉ VEREJNÉ UZLY (BEZ NEFUNKČNÝCH HEROKU PEEROV)
+       TU VKLADAJTE SVOJE FILMY PRIAMO DO KÓDU (100 VOĽNÝCH POLÍČOK)
+       
+       Ako to funguje:
+       - title: názov filmu
+       - thumb: URL adresa cloveru / miniatúry
+       - url: URL adresa videa (.mp4 z Catboxu, Pixeldrainu alebo YouTube)
+       - copyrighted: true (chránené) alebo false (bez ochrany)
+       
+       Akonáhle sem vložíte odkaz a uložíte kód, film sa na 100 % verejne
+       zobrazí každému na svete bez potreby akejkoľvek externej databázy!
        ===================================================================== */
-    const LIVE_PUBLIC_PEERS = [
-      'https://peer.wallie.io/gun',
-      'https://relay.peer.ooo/gun',
-      'https://gun-server.glitch.me/gun'
+    const MOVIE_SLOTS_DATABASE = [
+      { slot: 1, title: "", thumb: "", url: "", copyrighted: true },
+      { slot: 2, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 3, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 4, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 5, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 6, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 7, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 8, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 9, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 10, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 11, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 12, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 13, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 14, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 15, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 16, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 17, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 18, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 19, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 20, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 21, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 22, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 23, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 24, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 25, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 26, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 27, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 28, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 29, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 30, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 31, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 32, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 33, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 34, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 35, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 36, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 37, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 38, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 39, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 40, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 41, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 42, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 43, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 44, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 45, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 46, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 47, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 48, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 49, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 50, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 51, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 52, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 53, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 54, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 55, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 56, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 57, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 58, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 59, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 60, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 61, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 62, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 63, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 64, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 65, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 66, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 67, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 68, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 69, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 70, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 71, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 72, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 73, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 74, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 75, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 76, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 77, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 78, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 79, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 80, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 81, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 82, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 83, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 84, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 85, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 86, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 87, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 88, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 89, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 90, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 91, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 92, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 93, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 94, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 95, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 96, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 97, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 98, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 99, title: "", thumb: "", url: "", copyrighted: false },
+      { slot: 100, title: "", thumb: "", url: "", copyrighted: false }
     ];
 
+    /* =====================================================================
+       SYSTÉM SPRACOVANIA VIDEÍ A ZLÚČENIA SO ZÁLOHOU
+       ===================================================================== */
+    const LIVE_PUBLIC_PEERS = ['https://peer.wallie.io/gun', 'https://gun-server.glitch.me/gun'];
     const gun = Gun({ peers: LIVE_PUBLIC_PEERS });
-    const dbVideos = gun.get('streamflix_public_v7_catalog');
-    const dbUsers = gun.get('streamflix_public_v7_users');
+    const dbVideos = gun.get('streamflix_slots_v8_videos');
+    const dbUsers = gun.get('streamflix_slots_v8_users');
 
-    let localVideos = [];
+    let dynamicVideos = [];
     let currentUser = localStorage.getItem("streamflix_session_user") || null;
     let selectedPlanData = { name: "Základný", price: 9.49 };
     let activeSmsCode = "";
 
-    // Okamžité počúvanie všetkých verejne pridaných filmov
+    // Načítanie dynamicky pridaných filmov
     dbVideos.map().on((videoData, id) => {
       if (!videoData || !videoData.title) return;
-      const idx = localVideos.findIndex(v => v.id === id);
-      if (idx > -1) {
-        localVideos[idx] = { ...videoData, id };
-      } else {
-        localVideos.unshift({ ...videoData, id });
-      }
+      const idx = dynamicVideos.findIndex(v => v.id === id);
+      if (idx > -1) dynamicVideos[idx] = { ...videoData, id };
+      else dynamicVideos.unshift({ ...videoData, id });
       renderUI();
-      localStorage.setItem("streamflix_cache_v7", JSON.stringify(localVideos));
     });
-
-    const cached = localStorage.getItem("streamflix_cache_v7");
-    if (cached) {
-      localVideos = JSON.parse(cached);
-      renderUI();
-    }
 
     if (currentUser) {
       document.getElementById('navAuthBtn').innerText = `👤 ${currentUser}`;
     }
 
-    /* =====================================================================
-       100 % VEREJNÉ PREHRÁVANIE PRE VŠETKÝCH BEZ PAYWALLU (AKO YOUTUBE)
-       ===================================================================== */
-    function attemptPlay(video) {
-      // ŽIADNE BLOKOVANIE! Každý na svete môže film okamžite spustiť
-      startStreaming(video);
+    function getAllPublicVideos() {
+      // 1. Zoberie vyplnené filmy priamo z kódu (zo 100 slotov)
+      const filledFromCode = MOVIE_SLOTS_DATABASE
+        .filter(m => m.title.trim() !== "" && m.url.trim() !== "")
+        .map(m => ({
+          id: "slot_" + m.slot,
+          title: m.title,
+          thumb: m.thumb || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500",
+          url: m.url,
+          copyrighted: m.copyrighted,
+          owner: "Admin"
+        }));
+
+      // 2. Spojí ich s filmami zadanými cez tlačidlo "Zverejniť Film"
+      return [...filledFromCode, ...dynamicVideos];
     }
 
+    /* =====================================================================
+       RENDEROVANIE TOP 10 A ZOZNAMU VIDEÍ
+       ===================================================================== */
+    function renderUI() {
+      const allVideos = getAllPublicVideos();
+      const top10 = document.getElementById('top10Row');
+      const allRow = document.getElementById('allVideosRow');
+
+      if (allVideos.length === 0) {
+        top10.innerHTML = `<div class="empty-state">Zatiaľ nie sú zadané žiadne filmy. Vyplňte sloty v kóde (napr. Slot 1) alebo kliknite na tlačidlo "Zverejniť Film".</div>`;
+        allRow.innerHTML = `<div class="empty-state">Katalóg je pripravený pre verejnosť.</div>`;
+        return;
+      }
+
+      top10.innerHTML = "";
+      allRow.innerHTML = "";
+
+      // TOP 10 S VEĽKÝMI ČÍSLAMI
+      allVideos.slice(0, 10).forEach((v, index) => {
+        const item = document.createElement('div');
+        item.className = "top10-item";
+        item.onclick = () => startStreaming(v);
+        item.innerHTML = `
+          <div class="rank-number">${index + 1}</div>
+          <div class="poster-card" style="background-image: url('${v.thumb}');">
+            <span class="netflix-badge">N</span>
+            <span class="status-tag">TOP 10</span>
+          </div>
+        `;
+        top10.appendChild(item);
+      });
+
+      // VŠETKY OSTATNÉ VIDEÁ
+      allVideos.forEach(v => {
+        const c = document.createElement('div');
+        c.className = "standard-card";
+        c.style.backgroundImage = `url('${v.thumb}')`;
+        c.onclick = () => startStreaming(v);
+        c.innerHTML = `
+          <div class="video-title">
+            <b>${v.title}</b><br>
+            <span style="font-size:10px; color:#aaa;">Pridal: ${v.owner} ${v.copyrighted ? '• © Chránené' : ''}</span>
+          </div>
+        `;
+        allRow.appendChild(c);
+      });
+    }
+
+    /* =====================================================================
+       UNIVERZÁLNY PREHRÁVAČ (BEZ CHÝB, MP4 AJ YOUTUBE)
+       ===================================================================== */
     function startStreaming(video) {
-      // Pripísanie zisku autorovi za verejné pozretie
-      if (video.owner) {
+      if (video.owner && currentUser) {
         dbUsers.get(video.owner).once((ownerData) => {
           if (ownerData) {
             const currentWallet = ownerData.wallet || 0;
@@ -638,19 +789,20 @@
     }
 
     /* =====================================================================
-       ZVEREJNENIE VIDEA DO VEREJNEJ GLOBÁLNEJ SIETE
+       DYNAMICKÝ UPLOAD CEZ STRÁNKU
        ===================================================================== */
     function publishVideoGlobal() {
-      if (!currentUser) { alert("Pre zverejnenie sa musíte najprv prihlásiť!"); showModal('authModal'); return; }
+      if (!currentUser) { alert("Pre zverejnenie sa najprv prihláste!"); showModal('authModal'); return; }
 
       const title = document.getElementById('newTitle').value.trim();
       const url = document.getElementById('newVideoUrl').value.trim();
       const thumb = document.getElementById('newThumbUrl').value.trim();
       const isCopy = document.getElementById('newCopyright').checked;
 
-      if (!title || !url || !thumb) { alert("Vyplňte všetky polia!"); return; }
+      if (!title || !url) { alert("Vyplňte názov a URL videa!"); return; }
 
-      const conflict = localVideos.find(v => v.url.toLowerCase() === url.toLowerCase() && v.copyrighted && v.owner !== currentUser);
+      const all = getAllPublicVideos();
+      const conflict = all.find(v => v.url.toLowerCase() === url.toLowerCase() && v.copyrighted && v.owner !== currentUser);
 
       if (conflict) {
         dbUsers.get(currentUser).once((uData) => {
@@ -672,75 +824,25 @@
 
       const id = "vid_" + Date.now();
       const newVidData = {
-        title, url, thumb,
+        title, url,
+        thumb: thumb || "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=500",
         owner: currentUser,
         copyrighted: isCopy
       };
 
-      // Zápis do verejného cloudu Gun.js pre všetkých na svete
       dbVideos.get(id).put(newVidData);
-
-      // Okamžitá lokálna aktualizácia
-      localVideos.unshift({ ...newVidData, id });
-      localStorage.setItem("streamflix_cache_v7", JSON.stringify(localVideos));
+      dynamicVideos.unshift({ ...newVidData, id });
       renderUI();
 
       hideModal('uploadModal');
       document.getElementById('newTitle').value = "";
       document.getElementById('newVideoUrl').value = "";
       document.getElementById('newThumbUrl').value = "";
-      alert("Film bol úspešne zverejnený a je okamžite verejný pre každého na svete!");
+      alert("Film bol úspešne zverejnený!");
     }
 
     /* =====================================================================
-       RENDEROVANIE TOP 10 A ZOZNAMU VIDEÍ
-       ===================================================================== */
-    function renderUI() {
-      const top10 = document.getElementById('top10Row');
-      const allRow = document.getElementById('allVideosRow');
-
-      if (localVideos.length === 0) {
-        top10.innerHTML = `<div class="empty-state">Zatiaľ nie sú nahrané filmy. Kliknite na "Zverejniť Film" a pridajte prvý verejný film!</div>`;
-        allRow.innerHTML = `<div class="empty-state">Katalóg je pripravený pre verejnosť.</div>`;
-        return;
-      }
-
-      top10.innerHTML = "";
-      allRow.innerHTML = "";
-
-      // TOP 10
-      localVideos.slice(0, 10).forEach((v, index) => {
-        const item = document.createElement('div');
-        item.className = "top10-item";
-        item.onclick = () => attemptPlay(v);
-        item.innerHTML = `
-          <div class="rank-number">${index + 1}</div>
-          <div class="poster-card" style="background-image: url('${v.thumb}');">
-            <span class="netflix-badge">N</span>
-            <span class="status-tag">TOP 10</span>
-          </div>
-        `;
-        top10.appendChild(item);
-      });
-
-      // Všetky videá
-      localVideos.forEach(v => {
-        const c = document.createElement('div');
-        c.className = "standard-card";
-        c.style.backgroundImage = `url('${v.thumb}')`;
-        c.onclick = () => attemptPlay(v);
-        c.innerHTML = `
-          <div class="video-title">
-            <b>${v.title}</b><br>
-            <span style="font-size:10px; color:#aaa;">Pridal: ${v.owner} ${v.copyrighted ? '• © Chránené' : ''}</span>
-          </div>
-        `;
-        allRow.appendChild(c);
-      });
-    }
-
-    /* =====================================================================
-       VIP PLATOBNÁ BRÁNA & SMS OVERENIE
+       VIP BRÁNA, SMS KÓD, PIN & AUTENTIFIKÁCIA
        ===================================================================== */
     function openPlansModal() { showModal('plansModal'); }
 
@@ -751,17 +853,12 @@
     }
 
     async function triggerSmsPayment() {
-      if (!currentUser) {
-        alert("Pre aktiváciu VIP balíka sa najprv prihláste!");
-        hideModal('plansModal');
-        showModal('authModal');
-        return;
-      }
+      if (!currentUser) { alert("Najprv sa prihláste!"); hideModal('plansModal'); showModal('authModal'); return; }
 
       const card = document.getElementById('payCardNum').value.trim();
       const phone = document.getElementById('payPhone').value.trim();
 
-      if (!card || card.length < 12) { alert("Zadajte platné číslo karty alebo IBAN!"); return; }
+      if (!card || card.length < 12) { alert("Zadajte číslo karty alebo IBAN!"); return; }
       if (!phone || phone.length < 9) { alert("Zadajte telefónne číslo vo formáte +421...!"); return; }
 
       activeSmsCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -788,32 +885,22 @@
         if (resData.success) {
           noticeBox.innerHTML = `✅ SMS bola doručená na váš mobil (${phone})! Zadajte 6-miestny kód:`;
         } else {
-          noticeBox.innerHTML = `ℹ️ Vygenerovaný overovací kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
+          noticeBox.innerHTML = `ℹ️ Váš overovací SMS kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
         }
       } catch (err) {
-        noticeBox.innerHTML = `ℹ️ Váš overovací kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
+        noticeBox.innerHTML = `ℹ️ Váš overovací SMS kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
       }
     }
 
     function verifySmsCodeAndComplete() {
       const entered = document.getElementById('enteredSmsCode').value.trim();
-      if (entered !== activeSmsCode) {
-        alert("NESPRÁVNY OVEROVACÍ SMS KÓD!");
-        return;
-      }
+      if (entered !== activeSmsCode) { alert("NESPRÁVNY OVEROVACÍ SMS KÓD!"); return; }
 
-      dbUsers.get(currentUser).put({
-        vipActive: true,
-        vipPlan: selectedPlanData.name
-      });
-
-      alert(`✅ VIP BALÍK "${selectedPlanData.name}" AKTIVOVANÝ!`);
+      dbUsers.get(currentUser).put({ vipActive: true, vipPlan: selectedPlanData.name });
+      alert(`✅ VIP BALÍK "${selectedPlanData.name}" BOL ÚSPEŠNE AKTIVOVANÝ!`);
       hideModal('smsModal');
     }
 
-    /* =====================================================================
-       REGISTRÁCIA A 14-MIESTNY PIN
-       ===================================================================== */
     function generateSecurePin() {
       let pin = "";
       for (let i = 0; i < 14; i++) pin += Math.floor(Math.random() * 10);
@@ -840,9 +927,6 @@
       showModal('pinDisplayModal');
     }
 
-    /* =====================================================================
-       PRIHLÁSENIE: 2x 10s SKENER & SANKCIE
-       ===================================================================== */
     let pendingUser = null;
 
     function handleLoginFlow() {
@@ -860,7 +944,7 @@
       const interval = setInterval(() => {
         sec++;
         if (sec <= 10) {
-          title.innerText = "Fáza 1/2: Hľadáme váš účet vo verejných uzloch...";
+          title.innerText = "Fáza 1/2: Hľadáme váš účet v sieti...";
           sub.innerText = `Vyhľadávanie (${sec} / 10s)`;
         } else if (sec > 10 && sec <= 20) {
           title.innerText = "Fáza 2/2: Overovanie identity a šifrovania...";
@@ -870,10 +954,7 @@
           hideModal('scanModal');
 
           dbUsers.get(u).once((userData) => {
-            if (!userData || userData.password !== p) {
-              alert("Účet neexistuje alebo je heslo nesprávne!");
-              return;
-            }
+            if (!userData || userData.password !== p) { alert("Nesprávne údaje!"); return; }
             pendingUser = userData;
             showModal('pinInputModal');
           });
@@ -925,9 +1006,6 @@
       alert(`Vitajte späť, ${currentUser}!`);
     }
 
-    /* =====================================================================
-       ŠTÚDIO
-       ===================================================================== */
     function openStudio() {
       if (!currentUser) { alert("Najprv sa prihláste!"); return; }
 
@@ -945,7 +1023,7 @@
 
         const list = document.getElementById('studioVideoList');
         list.innerHTML = "";
-        const myVideos = localVideos.filter(v => v.owner === currentUser);
+        const myVideos = getAllPublicVideos().filter(v => v.owner === currentUser);
 
         if (myVideos.length === 0) {
           list.innerHTML = "<p style='color:#777; font-size:12px;'>Nemáte zatiaľ žiadne zverejnené filmy.</p>";
@@ -958,9 +1036,6 @@
                 <b>${v.title}</b><br>
                 <span style="font-size:11px; color:#aaa;">${v.copyrighted ? '© Chránené' : 'Bez ochrany'}</span>
               </div>
-              <button class="btn btn-secondary" style="font-size:11px;" onclick="toggleCopyright('${v.id}', ${!v.copyrighted})">
-                ${v.copyrighted ? 'Zrušiť ochranu' : 'Aktivovať ochranu'}
-              </button>
             `;
             list.appendChild(item);
           });
@@ -970,14 +1045,11 @@
       });
     }
 
-    function toggleCopyright(id, newState) {
-      dbVideos.get(id).get('copyrighted').put(newState);
-      alert(newState ? "Autorské práva zapnuté." : "Autorské práva zrušené! Všetky sankcie z tohto filmu boli stiahnuté.");
-      hideModal('studioModal');
-    }
-
     function showModal(id) { document.getElementById(id).style.display = 'flex'; }
     function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    // Štart
+    renderUI();
   </script>
 </body>
 </html>
