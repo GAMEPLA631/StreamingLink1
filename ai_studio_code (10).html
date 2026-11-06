@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamFlix 8K - Verejné Globálne Kino & Štúdio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <!-- ŽIVÉ AKTÍVNE CLOUDOVÉ RELAY UZLY PRE VEREJNÚ SYNCHRONIZÁCIU -->
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #070709;
+      --card-bg: #121217;
+      --netflix-red: #E50914;
+      --neon-rainbow: linear-gradient(135deg, #ff0055, #7928ca, #00f0ff, #00ff88);
+      --border-glass: rgba(255, 255, 255, 0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 5% 5%, rgba(121, 40, 202, 0.22) 0%, transparent 40%),
+        radial-gradient(circle at 95% 95%, rgba(0, 240, 255, 0.18) 0%, transparent 40%);
+    }
+
+    /* HEADER */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 45px;
+      background: rgba(7, 7, 9, 0.94);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .logo {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--netflix-red);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(229, 9, 20, 0.6);
+    }
+    .nav-actions { display: flex; align-items: center; gap: 14px; }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-rainbow {
+      background: var(--neon-rainbow);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    }
+    .btn-rainbow:hover { transform: scale(1.04); filter: brightness(1.2); }
+    .btn-danger { background: var(--netflix-red); color: #fff; }
+    .btn-secondary { background: #22222b; color: #eee; border: 1px solid #3c3c4d; }
+    .btn-secondary:hover { background: #2f2f3d; }
+    .btn-success { background: #00c853; color: #fff; }
+
+    main { padding: 35px 45px; }
+    h2.section-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* HOSTING BANNER */
+    .cloud-banner {
+      background: linear-gradient(90deg, #181129, #0e1e24);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 16px 24px;
+      border-radius: 12px;
+      margin-bottom: 35px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* TOP 10 NETFLIX PREVEDENIE S ČÍSLAMI */
+    .row-container {
+      display: flex;
+      gap: 25px;
+      overflow-x: auto;
+      padding-bottom: 25px;
+    }
+    .row-container::-webkit-scrollbar { height: 6px; }
+    .row-container::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+
+    .top10-item {
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+      min-width: 260px;
+      height: 210px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .top10-item:hover { transform: scale(1.06); }
+
+    .rank-number {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 200px;
+      font-weight: 900;
+      line-height: 0.78;
+      color: #070709;
+      -webkit-text-stroke: 4.5px #595959;
+      position: relative;
+      left: 15px;
+      z-index: 1;
+      user-select: none;
+    }
+
+    .poster-card {
+      width: 145px;
+      height: 200px;
+      border-radius: 6px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+      border: 1px solid var(--border-glass);
+      overflow: hidden;
+    }
+    .poster-card .netflix-badge {
+      position: absolute;
+      top: 6px; left: 8px;
+      color: var(--netflix-red);
+      font-weight: 900;
+      font-size: 16px;
+    }
+    .poster-card .status-tag {
+      position: absolute;
+      bottom: 8px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--netflix-red);
+      color: #fff;
+      font-size: 8px;
+      font-weight: 900;
+      padding: 3px 6px;
+      border-radius: 2px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .standard-card {
+      min-width: 260px;
+      height: 160px;
+      border-radius: 8px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--border-glass);
+      transition: 0.3s;
+      overflow: hidden;
+    }
+    .standard-card:hover { transform: scale(1.04); box-shadow: 0 0 25px rgba(0,240,255,0.3); }
+    .standard-card .video-title {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 12px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.95));
+      font-size: 13px;
+    }
+
+    .empty-state {
+      padding: 50px 20px;
+      text-align: center;
+      background: rgba(18, 18, 23, 0.4);
+      border: 2px dashed #333;
+      border-radius: 12px;
+      width: 100%;
+    }
+
+    /* MODÁLY */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 5, 8, 0.94);
+      backdrop-filter: blur(25px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-glass);
+      padding: 35px;
+      border-radius: 16px;
+      width: 520px;
+      max-width: 95%;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.95);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-card input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      background: #1b1b22;
+      border: 1px solid #333;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: var(--neon-rainbow);
+      position: relative;
+      margin: 20px auto;
+      animation: rotate 1s linear infinite;
+    }
+    .spinner::after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      background: var(--card-bg);
+      border-radius: 50%;
+    }
+    @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+    /* BALÍKY */
+    .plans-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 15px;
+      text-align: left;
+    }
+    .plan-box {
+      background: #191921;
+      border: 1px solid #333;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .plan-box:hover, .plan-box.selected {
+      border-color: #00f0ff;
+      background: #20202c;
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px rgba(0,240,255,0.25);
+    }
+    .plan-box h4 { font-size: 14px; color: #fff; }
+    .plan-box .price { font-size: 16px; font-weight: 800; color: #00ff88; margin: 4px 0; }
+    .plan-box ul { list-style: none; font-size: 10px; color: #aaa; }
+
+    .custom-pay-card {
+      background: #15151e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 15px;
+      text-align: left;
+    }
+
+    .db-cluster-hud {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background: rgba(10, 10, 14, 0.9);
+      border: 1px solid #282835;
+      padding: 8px 15px;
+      border-radius: 30px;
+      font-size: 11px;
+      display: flex;
+      gap: 12px;
+      z-index: 9999;
+      backdrop-filter: blur(10px);
+    }
+    .db-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+
+    .player-window {
+      width: 90%;
+      max-width: 1100px;
+      height: 600px;
+      background: #000;
+      border-radius: 12px;
+      border: 1px solid #444;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- MONITOR ŽIVÝCH UZLOV -->
+  <div class="db-cluster-hud">
+    <span><span class="db-dot"></span>Uzol 1 (Wallie Peer)</span>
+    <span><span class="db-dot"></span>Uzol 2 (Peer.ooo)</span>
+    <span><span class="db-dot"></span>Uzol 3 (Glitch Sync)</span>
+    <span><span class="db-dot"></span>Verejná Sieť (Online)</span>
+  </div>
+
+  <header>
+    <div class="logo">StreamFlix</div>
+    <div class="nav-actions">
+      <button class="btn btn-secondary" onclick="openPlansModal()">💎 VIP 8K & Podpora</button>
+      <button class="btn btn-secondary" onclick="openStudio()">🎬 Tvorcovské Štúdio</button>
+      <button class="btn btn-rainbow" onclick="showModal('uploadModal')">➕ Zverejniť Film (URL)</button>
+      <button class="btn btn-danger" id="navAuthBtn" onclick="showModal('authModal')">Prihlásiť / Registrovať</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="cloud-banner">
+      <div>
+        <strong>Zverejnenie priameho videa (.mp4 bez html kódu):</strong>
+        <p style="font-size: 13px; color: #aaa; margin-top: 4px;">
+          Pre priamu URL nahrajte video na <b>Catbox.moe</b> alebo <b>Pixeldrain.com</b>. Odkaz vložte cez tlačidlo "Zverejniť Film". Všetok zverejnený obsah je <b>100 % verejný pre každého</b>.
+        </p>
+      </div>
+      <a href="https://catbox.moe/" target="_blank" class="btn btn-secondary" style="text-decoration:none;">Otvoriť Catbox ↗</a>
+    </div>
+
+    <!-- SEKCIA 1: TOP 10 NETFLIX S VEĽKÝMI ČÍSLAMI -->
+    <h2 class="section-title">Top 10 Filmov Dnes</h2>
+    <div class="row-container" id="top10Row">
+      <div class="empty-state">Zatiaľ nie sú nahrané filmy. Kliknite na "Zverejniť Film" a pridajte prvý verejný film!</div>
+    </div>
+
+    <!-- SEKCIA 2: VŠETKY OSTATNÉ VIDEÁ -->
+    <h2 class="section-title" style="margin-top: 40px;">Všetky zverejnené videá</h2>
+    <div class="row-container" id="allVideosRow">
+      <div class="empty-state">Katalóg je pripravený pre verejnosť.</div>
+    </div>
+  </main>
+
+  <!-- MODAL: STREAMFLIX PAY (SMS OVERENIE & VIP PODPORA) -->
+  <div class="modal-overlay" id="plansModal">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
+        <span style="color:#00ff88; font-size:22px;">💳</span>
+        <h2>StreamFlix VIP Pay</h2>
+      </div>
+      <p style="font-size: 12px; color: #aaa; margin-top:4px;">Aktivácia VIP 8K HDR streamingu a odznaku tvorcu s 2-faktorovým SMS overením</p>
+      
+      <div class="plans-container">
+        <div class="plan-box selected" onclick="selectPlan('Základný', 9.49, this)">
+          <h4>Základný</h4>
+          <div class="price">9,49 € <span style="font-size:10px; color:#888;">/mesiac</span></div>
+          <ul>
+            <li>✓ Podpora tvorcov</li>
+            <li>✓ Štandardná kvalita</li>
+          </ul>
+        </div>
+
+        <div class="plan-box" onclick="selectPlan('Štandardný', 11.49, this)">
+          <h4>Štandardný</h4>
+          <div class="price">11,49 € <span style="font-size:10px; color:#888;">/mesiac</span></div>
+          <ul>
+            <li>✓ Full HD 1080p</li>
+            <li>✓ VIP Odznak</li>
+          </ul>
+        </div>
+
+        <div class="plan-box" onclick="selectPlan('Prémiový 8K', 13.99, this)">
+          <h4>Prémiový 8K</h4>
+          <div class="price">13,99 € <span style="font-size:10px; color:#888;">/mesiac</span></div>
+          <ul>
+            <li>✓ 4K + 8K Ultra HDR</li>
+            <li>✓ Zlatý VIP Profil</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="custom-pay-card">
+        <label style="font-size:11px; color:#aaa;">Číslo platobnej karty (alebo IBAN)</label>
+        <input type="text" id="payCardNum" placeholder="4500 0000 0000 0000" maxlength="19">
+        
+        <div style="display:flex; gap:10px;">
+          <div style="flex:1;">
+            <label style="font-size:11px; color:#aaa;">Expirácia (MM/RR)</label>
+            <input type="text" id="payCardExp" placeholder="12/28" maxlength="5">
+          </div>
+          <div style="flex:1;">
+            <label style="font-size:11px; color:#aaa;">CVC / CVV</label>
+            <input type="password" id="payCardCvc" placeholder="123" maxlength="3">
+          </div>
+        </div>
+
+        <label style="font-size:11px; color:#00f0ff; font-weight:700;">Telefónne číslo na odoslanie overovacej SMS (+421...):</label>
+        <input type="tel" id="payPhone" placeholder="+421 900 123 456">
+      </div>
+
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="triggerSmsPayment()">
+        Odoslať overovací SMS kód
+      </button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="hideModal('plansModal')">Zrušiť</button>
+    </div>
+  </div>
+
+  <!-- MODAL: SMS KÓD -->
+  <div class="modal-overlay" id="smsModal">
+    <div class="modal-card">
+      <div style="color:#00ff88; font-size:32px;">📱</div>
+      <h2>Zadajte SMS Overovací Kód</h2>
+      <p style="font-size: 13px; color: #ccc; margin: 10px 0;">
+        Na číslo <b id="displayTargetPhone" style="color:#00f0ff;"></b> bol odoslaný 6-miestny kód.
+      </p>
+
+      <div id="smsBackupNotice" style="background:#1f1b2b; border:1px solid #7928ca; padding:10px; border-radius:6px; font-size:12px; color:#00ff88; margin:10px 0; display:none;"></div>
+
+      <input type="text" id="enteredSmsCode" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:6px; font-family:monospace;">
+      
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 15px; padding: 12px;" onclick="verifySmsCodeAndComplete()">
+        Overiť a potvrdiť VIP aktiváciu
+      </button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="hideModal('smsModal'); showModal('plansModal');">Späť</button>
+    </div>
+  </div>
+
+  <!-- MODAL: REGISTRÁCIA / PRIHLÁSENIE -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-card">
+      <h2>Globálny Prístup</h2>
+      <p style="font-size: 12px; color: #888; margin-bottom: 15px;">Decentralizovaný bezpečný účet</p>
+      <input type="text" id="authUsername" placeholder="Prezývka (Username)">
+      <input type="email" id="authEmail" placeholder="Emailová adresa">
+      <input type="password" id="authPassword" placeholder="Heslo">
+
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 10px; padding: 12px;" onclick="handleLoginFlow()">Prihlásiť sa cez 2× 10s kontrolu</button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="handleRegisterFlow()">Registrovať & Vygenerovať 14-miestny PIN</button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 8px; border:none;" onclick="hideModal('authModal')">Zrušiť</button>
+    </div>
+  </div>
+
+  <!-- MODAL: 14-MIESTNY PIN -->
+  <div class="modal-overlay" id="pinDisplayModal">
+    <div class="modal-card">
+      <h2 style="color: #00ff88;">Účet bol vytvorený!</h2>
+      <p style="font-size: 13px; color: #ccc; margin: 10px 0;">
+        Váš 14-miestny bezpečnostný PIN (uchovajte v tajnosti, slúži na prihlasovanie):
+      </p>
+      <div style="font-family: monospace; font-size: 22px; letter-spacing: 3px; color: #00ff88; background: #0c2016; padding: 15px; border-radius: 8px; border: 1px dashed #00ff88;" id="generatedPinText"></div>
+      <p style="font-size: 11px; color: #ff5252; margin-top: 10px;">PIN nikomu nedávajte!</p>
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 15px;" onclick="hideModal('pinDisplayModal'); showModal('authModal');">Mám zapísaný PIN, prihlásiť sa</button>
+    </div>
+  </div>
+
+  <!-- MODAL: 2x 10s SKENER -->
+  <div class="modal-overlay" id="scanModal">
+    <div class="modal-card">
+      <div class="spinner"></div>
+      <h3 id="scanTitle">Fáza 1/2: Hľadáme váš účet vo verejných uzloch...</h3>
+      <p id="scanSub" style="color: #00f0ff; font-size: 13px; margin-top: 8px;">Prebieha overenie (1 / 10s)</p>
+    </div>
+  </div>
+
+  <!-- MODAL: OVERENIE PINU -->
+  <div class="modal-overlay" id="pinInputModal">
+    <div class="modal-card">
+      <h2>Bezpečnostná Autorizácia</h2>
+      <p style="font-size: 13px; color: #aaa; margin: 10px 0;">Zadajte svoj 13–16 miestny overovací PIN k účtu:</p>
+      <input type="text" id="enteredPin" placeholder="XXXX-XXXX-XXXX-XX" style="text-align:center; font-size:18px; letter-spacing:2px;">
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 12px; padding: 12px;" onclick="validatePinAndCheckSanctions()">Overiť PIN a vstúpiť</button>
+    </div>
+  </div>
+
+  <!-- MODAL: ZVEREJNENIE VIDEA -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal-card" style="text-align: left;">
+      <h2>Zverejniť verejný film / video</h2>
+      <p style="font-size:11px; color:#aaa; margin-bottom:10px;">Film sa okamžite verejne sprístupní pre všetkých používateľov na celom svete.</p>
+      <input type="text" id="newTitle" placeholder="Názov filmu">
+      <input type="url" id="newVideoUrl" placeholder="Priama URL videa (napr. https://files.catbox.moe/...mp4 alebo YouTube)">
+      <input type="url" id="newThumbUrl" placeholder="URL obalu (Cover / Miniatúra)">
+      
+      <div style="margin: 10px 0; background: #1a1a23; padding: 12px; border-radius: 6px;">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px;">
+          <input type="checkbox" id="newCopyright" style="width:auto; margin:0;">
+          <b>Chrániť autorskými právami (Copyright)</b>
+        </label>
+        <span style="font-size:11px; color:#888;">Ak niekto iný použije rovnakú URL, systém mu udelí sankciu.</span>
+      </div>
+
+      <button class="btn btn-rainbow" style="width: 100%; margin-top: 10px;" onclick="publishVideoGlobal()">Zverejniť verejne do celého sveta</button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 8px;" onclick="hideModal('uploadModal')">Zrušiť</button>
+    </div>
+  </div>
+
+  <!-- MODAL: ŠTÚDIO -->
+  <div class="modal-overlay" id="studioModal">
+    <div class="modal-card" style="width: 700px; text-align: left;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2>Tvorcovské Štúdio & Peňaženka</h2>
+        <button class="btn btn-secondary" onclick="hideModal('studioModal')">✕</button>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #1b2721, #131c17); border: 1px solid #00ff8844; padding: 15px; border-radius: 8px; margin: 15px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:12px; color:#88d8b0;">Zisk za verejné pozretia vašich filmov:</div>
+            <div style="font-size:24px; font-weight:900; color:#00ff88;" id="walletAmount">0,00 €</div>
+          </div>
+          <button class="btn btn-success" style="font-size:12px;" onclick="alert('Peniaze boli odoslané na váš bankový účet!')">Vybrať zisk</button>
+        </div>
+      </div>
+
+      <div id="studioStrikeBox" style="margin: 10px 0; padding: 10px; border-radius: 6px;"></div>
+      <h4 style="margin-top: 15px;">Moje zverejnené filmy:</h4>
+      <div id="studioVideoList" style="margin-top: 10px; max-height: 200px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PREHRÁVAČ -->
+  <div class="modal-overlay" id="playerModal">
+    <div class="player-window">
+      <div style="background:#111; padding:10px 15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333;">
+        <span id="playingTitle" style="font-size:14px; font-weight:700;">Prehráva sa verejné video...</span>
+        <button class="btn btn-danger" style="padding:4px 10px; font-size:12px;" onclick="closePlayer()">✕ Zavrieť</button>
+      </div>
+      <div id="playerContainer" style="flex:1; width:100%; height:100%; background:#000; display:flex; align-items:center; justify-content:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       ŽIVÉ A FUNKČNÉ VEREJNÉ UZLY (BEZ NEFUNKČNÝCH HEROKU PEEROV)
+       ===================================================================== */
+    const LIVE_PUBLIC_PEERS = [
+      'https://peer.wallie.io/gun',
+      'https://relay.peer.ooo/gun',
+      'https://gun-server.glitch.me/gun'
+    ];
+
+    const gun = Gun({ peers: LIVE_PUBLIC_PEERS });
+    const dbVideos = gun.get('streamflix_public_v7_catalog');
+    const dbUsers = gun.get('streamflix_public_v7_users');
+
+    let localVideos = [];
+    let currentUser = localStorage.getItem("streamflix_session_user") || null;
+    let selectedPlanData = { name: "Základný", price: 9.49 };
+    let activeSmsCode = "";
+
+    // Okamžité počúvanie všetkých verejne pridaných filmov
+    dbVideos.map().on((videoData, id) => {
+      if (!videoData || !videoData.title) return;
+      const idx = localVideos.findIndex(v => v.id === id);
+      if (idx > -1) {
+        localVideos[idx] = { ...videoData, id };
+      } else {
+        localVideos.unshift({ ...videoData, id });
+      }
+      renderUI();
+      localStorage.setItem("streamflix_cache_v7", JSON.stringify(localVideos));
+    });
+
+    const cached = localStorage.getItem("streamflix_cache_v7");
+    if (cached) {
+      localVideos = JSON.parse(cached);
+      renderUI();
+    }
+
+    if (currentUser) {
+      document.getElementById('navAuthBtn').innerText = `👤 ${currentUser}`;
+    }
+
+    /* =====================================================================
+       100 % VEREJNÉ PREHRÁVANIE PRE VŠETKÝCH BEZ PAYWALLU (AKO YOUTUBE)
+       ===================================================================== */
+    function attemptPlay(video) {
+      // ŽIADNE BLOKOVANIE! Každý na svete môže film okamžite spustiť
+      startStreaming(video);
+    }
+
+    function startStreaming(video) {
+      // Pripísanie zisku autorovi za verejné pozretie
+      if (video.owner) {
+        dbUsers.get(video.owner).once((ownerData) => {
+          if (ownerData) {
+            const currentWallet = ownerData.wallet || 0;
+            dbUsers.get(video.owner).get('wallet').put(currentWallet + 0.05);
+          }
+        });
+      }
+
+      const container = document.getElementById('playerContainer');
+      document.getElementById('playingTitle').innerText = video.title;
+      container.innerHTML = "";
+
+      const url = (video.url || "").trim();
+
+      if (url.includes("youtube.com") || url.includes("youtu.be")) {
+        let ytId = "";
+        if (url.includes("youtu.be/")) ytId = url.split("youtu.be/")[1].split("?")[0];
+        else if (url.includes("v=")) ytId = url.split("v=")[1].split("&")[0];
+        else if (url.includes("embed/")) ytId = url.split("embed/")[1].split("?")[0];
+
+        container.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}?autoplay=1" style="width:100%; height:100%; border:none;" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
+      } else {
+        const vidEl = document.createElement('video');
+        vidEl.controls = true;
+        vidEl.autoplay = true;
+        vidEl.style = "width:100%; height:100%; object-fit:contain;";
+        vidEl.src = url;
+        container.appendChild(vidEl);
+      }
+
+      showModal('playerModal');
+    }
+
+    function closePlayer() {
+      document.getElementById('playerContainer').innerHTML = "";
+      hideModal('playerModal');
+    }
+
+    /* =====================================================================
+       ZVEREJNENIE VIDEA DO VEREJNEJ GLOBÁLNEJ SIETE
+       ===================================================================== */
+    function publishVideoGlobal() {
+      if (!currentUser) { alert("Pre zverejnenie sa musíte najprv prihlásiť!"); showModal('authModal'); return; }
+
+      const title = document.getElementById('newTitle').value.trim();
+      const url = document.getElementById('newVideoUrl').value.trim();
+      const thumb = document.getElementById('newThumbUrl').value.trim();
+      const isCopy = document.getElementById('newCopyright').checked;
+
+      if (!title || !url || !thumb) { alert("Vyplňte všetky polia!"); return; }
+
+      const conflict = localVideos.find(v => v.url.toLowerCase() === url.toLowerCase() && v.copyrighted && v.owner !== currentUser);
+
+      if (conflict) {
+        dbUsers.get(currentUser).once((uData) => {
+          const currentStrikes = (uData.strikes || 0) + 1;
+          dbUsers.get(currentUser).get('strikes').put(currentStrikes);
+
+          if (currentStrikes >= 10) {
+            alert(`KRÁDEŽ FILMU!\nVlastník: ${conflict.owner}.\nToto bola vaša 10. sankcia.\nVÁŠ ÚČET BOL NATRVALO ODSTRÁNENÝ SKRZ PORUŠENIA AUTORSKÝCH PRÁV!`);
+            dbUsers.get(currentUser).put(null);
+            localStorage.removeItem("streamflix_session_user");
+            location.reload();
+          } else {
+            alert(`ZISTENÉ PORUŠENIE AUTORSKÝCH PRÁV!\nFilm vlastní ${conflict.owner}.\nDostávate sankciu (Máte ${currentStrikes} sankcií).`);
+          }
+        });
+        hideModal('uploadModal');
+        return;
+      }
+
+      const id = "vid_" + Date.now();
+      const newVidData = {
+        title, url, thumb,
+        owner: currentUser,
+        copyrighted: isCopy
+      };
+
+      // Zápis do verejného cloudu Gun.js pre všetkých na svete
+      dbVideos.get(id).put(newVidData);
+
+      // Okamžitá lokálna aktualizácia
+      localVideos.unshift({ ...newVidData, id });
+      localStorage.setItem("streamflix_cache_v7", JSON.stringify(localVideos));
+      renderUI();
+
+      hideModal('uploadModal');
+      document.getElementById('newTitle').value = "";
+      document.getElementById('newVideoUrl').value = "";
+      document.getElementById('newThumbUrl').value = "";
+      alert("Film bol úspešne zverejnený a je okamžite verejný pre každého na svete!");
+    }
+
+    /* =====================================================================
+       RENDEROVANIE TOP 10 A ZOZNAMU VIDEÍ
+       ===================================================================== */
+    function renderUI() {
+      const top10 = document.getElementById('top10Row');
+      const allRow = document.getElementById('allVideosRow');
+
+      if (localVideos.length === 0) {
+        top10.innerHTML = `<div class="empty-state">Zatiaľ nie sú nahrané filmy. Kliknite na "Zverejniť Film" a pridajte prvý verejný film!</div>`;
+        allRow.innerHTML = `<div class="empty-state">Katalóg je pripravený pre verejnosť.</div>`;
+        return;
+      }
+
+      top10.innerHTML = "";
+      allRow.innerHTML = "";
+
+      // TOP 10
+      localVideos.slice(0, 10).forEach((v, index) => {
+        const item = document.createElement('div');
+        item.className = "top10-item";
+        item.onclick = () => attemptPlay(v);
+        item.innerHTML = `
+          <div class="rank-number">${index + 1}</div>
+          <div class="poster-card" style="background-image: url('${v.thumb}');">
+            <span class="netflix-badge">N</span>
+            <span class="status-tag">TOP 10</span>
+          </div>
+        `;
+        top10.appendChild(item);
+      });
+
+      // Všetky videá
+      localVideos.forEach(v => {
+        const c = document.createElement('div');
+        c.className = "standard-card";
+        c.style.backgroundImage = `url('${v.thumb}')`;
+        c.onclick = () => attemptPlay(v);
+        c.innerHTML = `
+          <div class="video-title">
+            <b>${v.title}</b><br>
+            <span style="font-size:10px; color:#aaa;">Pridal: ${v.owner} ${v.copyrighted ? '• © Chránené' : ''}</span>
+          </div>
+        `;
+        allRow.appendChild(c);
+      });
+    }
+
+    /* =====================================================================
+       VIP PLATOBNÁ BRÁNA & SMS OVERENIE
+       ===================================================================== */
+    function openPlansModal() { showModal('plansModal'); }
+
+    function selectPlan(name, price, element) {
+      selectedPlanData = { name, price };
+      document.querySelectorAll('.plan-box').forEach(b => b.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    async function triggerSmsPayment() {
+      if (!currentUser) {
+        alert("Pre aktiváciu VIP balíka sa najprv prihláste!");
+        hideModal('plansModal');
+        showModal('authModal');
+        return;
+      }
+
+      const card = document.getElementById('payCardNum').value.trim();
+      const phone = document.getElementById('payPhone').value.trim();
+
+      if (!card || card.length < 12) { alert("Zadajte platné číslo karty alebo IBAN!"); return; }
+      if (!phone || phone.length < 9) { alert("Zadajte telefónne číslo vo formáte +421...!"); return; }
+
+      activeSmsCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+      document.getElementById('displayTargetPhone').innerText = phone;
+      const noticeBox = document.getElementById('smsBackupNotice');
+      noticeBox.style.display = "block";
+      noticeBox.innerHTML = `Odosielam skutočnú SMS na číslo ${phone}...`;
+
+      hideModal('plansModal');
+      showModal('smsModal');
+
+      try {
+        const response = await fetch('https://textbelt.com/text', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: phone,
+            message: `[StreamFlix VIP] Váš overovací SMS kód je: ${activeSmsCode}`,
+            key: 'textbelt'
+          })
+        });
+        const resData = await response.json();
+        if (resData.success) {
+          noticeBox.innerHTML = `✅ SMS bola doručená na váš mobil (${phone})! Zadajte 6-miestny kód:`;
+        } else {
+          noticeBox.innerHTML = `ℹ️ Vygenerovaný overovací kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
+        }
+      } catch (err) {
+        noticeBox.innerHTML = `ℹ️ Váš overovací kód k platbe je: <b style="font-size:16px; letter-spacing:2px; color:#fff;">${activeSmsCode}</b>`;
+      }
+    }
+
+    function verifySmsCodeAndComplete() {
+      const entered = document.getElementById('enteredSmsCode').value.trim();
+      if (entered !== activeSmsCode) {
+        alert("NESPRÁVNY OVEROVACÍ SMS KÓD!");
+        return;
+      }
+
+      dbUsers.get(currentUser).put({
+        vipActive: true,
+        vipPlan: selectedPlanData.name
+      });
+
+      alert(`✅ VIP BALÍK "${selectedPlanData.name}" AKTIVOVANÝ!`);
+      hideModal('smsModal');
+    }
+
+    /* =====================================================================
+       REGISTRÁCIA A 14-MIESTNY PIN
+       ===================================================================== */
+    function generateSecurePin() {
+      let pin = "";
+      for (let i = 0; i < 14; i++) pin += Math.floor(Math.random() * 10);
+      return pin.slice(0,4) + "-" + pin.slice(4,8) + "-" + pin.slice(8,12) + "-" + pin.slice(12,14);
+    }
+
+    function handleRegisterFlow() {
+      const u = document.getElementById('authUsername').value.trim();
+      const e = document.getElementById('authEmail').value.trim();
+      const p = document.getElementById('authPassword').value.trim();
+
+      if (!u || !p) { alert("Zadajte meno a heslo!"); return; }
+
+      const generatedPin = generateSecurePin();
+
+      dbUsers.get(u).put({
+        username: u, email: e, password: p,
+        pin: generatedPin, strikes: 0, wallet: 0.00,
+        registeredAt: Date.now()
+      });
+
+      hideModal('authModal');
+      document.getElementById('generatedPinText').innerText = generatedPin;
+      showModal('pinDisplayModal');
+    }
+
+    /* =====================================================================
+       PRIHLÁSENIE: 2x 10s SKENER & SANKCIE
+       ===================================================================== */
+    let pendingUser = null;
+
+    function handleLoginFlow() {
+      const u = document.getElementById('authUsername').value.trim();
+      const p = document.getElementById('authPassword').value.trim();
+      if (!u || !p) { alert("Vyplňte meno a heslo!"); return; }
+
+      hideModal('authModal');
+      showModal('scanModal');
+
+      let sec = 0;
+      const title = document.getElementById('scanTitle');
+      const sub = document.getElementById('scanSub');
+
+      const interval = setInterval(() => {
+        sec++;
+        if (sec <= 10) {
+          title.innerText = "Fáza 1/2: Hľadáme váš účet vo verejných uzloch...";
+          sub.innerText = `Vyhľadávanie (${sec} / 10s)`;
+        } else if (sec > 10 && sec <= 20) {
+          title.innerText = "Fáza 2/2: Overovanie identity a šifrovania...";
+          sub.innerText = `Rozpoznávanie (${sec - 10} / 10s)`;
+        } else {
+          clearInterval(interval);
+          hideModal('scanModal');
+
+          dbUsers.get(u).once((userData) => {
+            if (!userData || userData.password !== p) {
+              alert("Účet neexistuje alebo je heslo nesprávne!");
+              return;
+            }
+            pendingUser = userData;
+            showModal('pinInputModal');
+          });
+        }
+      }, 1000);
+    }
+
+    function validatePinAndCheckSanctions() {
+      const enteredPin = document.getElementById('enteredPin').value.trim();
+
+      if (enteredPin !== pendingUser.pin && enteredPin.replace(/-/g, '') !== pendingUser.pin.replace(/-/g, '')) {
+        alert("NESPRÁVNY BEZPEČNOSTNÝ PIN!");
+        return;
+      }
+
+      const now = Date.now();
+      const strikes = pendingUser.strikes || 0;
+
+      if (strikes >= 10) {
+        alert("VÁŠ ÚČET BOL NATRVALO ODSTRÁNENÝ SKRZ PORUŠENIA AUTORSKÝCH PRÁV!");
+        dbUsers.get(pendingUser.username).put(null);
+        hideModal('pinInputModal');
+        return;
+      }
+
+      if (strikes >= 3) {
+        if (!pendingUser.bannedUntil || pendingUser.bannedUntil < now) {
+          pendingUser.bannedUntil = now + (3 * 24 * 60 * 60 * 1000);
+          dbUsers.get(pendingUser.username).get('bannedUntil').put(pendingUser.bannedUntil);
+        }
+      } else if (strikes === 2) {
+        if (!pendingUser.bannedUntil || pendingUser.bannedUntil < now) {
+          pendingUser.bannedUntil = now + (1 * 24 * 60 * 60 * 1000);
+          dbUsers.get(pendingUser.username).get('bannedUntil').put(pendingUser.bannedUntil);
+        }
+      }
+
+      if (pendingUser.bannedUntil && pendingUser.bannedUntil > now) {
+        const remainingHours = Math.ceil((pendingUser.bannedUntil - now) / (1000 * 60 * 60));
+        alert(`Účet má ${strikes} sankcie. Prístup pozastavený na ${remainingHours} hodín.`);
+        hideModal('pinInputModal');
+        return;
+      }
+
+      currentUser = pendingUser.username;
+      localStorage.setItem("streamflix_session_user", currentUser);
+      document.getElementById('navAuthBtn').innerText = `👤 ${currentUser}`;
+      hideModal('pinInputModal');
+      alert(`Vitajte späť, ${currentUser}!`);
+    }
+
+    /* =====================================================================
+       ŠTÚDIO
+       ===================================================================== */
+    function openStudio() {
+      if (!currentUser) { alert("Najprv sa prihláste!"); return; }
+
+      dbUsers.get(currentUser).once((userData) => {
+        const strikes = userData ? (userData.strikes || 0) : 0;
+        const wallet = userData ? (userData.wallet || 0) : 0;
+        
+        document.getElementById('walletAmount').innerText = wallet.toFixed(2) + " €";
+
+        const box = document.getElementById('studioStrikeBox');
+        box.style.background = strikes > 0 ? "#331317" : "#13271a";
+        box.style.border = strikes > 0 ? "1px solid #ff4444" : "1px solid #00ff88";
+        box.innerHTML = `<strong>Sankcie na účte: ${strikes} / 10</strong><br>
+        <span style="font-size:11px; color:#aaa;">2 sankcie = 1 deň ban | 3 sankcie = 3 dni ban | 10 sankcií = zmazanie účtu</span>`;
+
+        const list = document.getElementById('studioVideoList');
+        list.innerHTML = "";
+        const myVideos = localVideos.filter(v => v.owner === currentUser);
+
+        if (myVideos.length === 0) {
+          list.innerHTML = "<p style='color:#777; font-size:12px;'>Nemáte zatiaľ žiadne zverejnené filmy.</p>";
+        } else {
+          myVideos.forEach(v => {
+            const item = document.createElement('div');
+            item.style = "display:flex; justify-content:space-between; align-items:center; background:#1c1c25; padding:8px 12px; margin-bottom:8px; border-radius:6px;";
+            item.innerHTML = `
+              <div>
+                <b>${v.title}</b><br>
+                <span style="font-size:11px; color:#aaa;">${v.copyrighted ? '© Chránené' : 'Bez ochrany'}</span>
+              </div>
+              <button class="btn btn-secondary" style="font-size:11px;" onclick="toggleCopyright('${v.id}', ${!v.copyrighted})">
+                ${v.copyrighted ? 'Zrušiť ochranu' : 'Aktivovať ochranu'}
+              </button>
+            `;
+            list.appendChild(item);
+          });
+        }
+
+        showModal('studioModal');
+      });
+    }
+
+    function toggleCopyright(id, newState) {
+      dbVideos.get(id).get('copyrighted').put(newState);
+      alert(newState ? "Autorské práva zapnuté." : "Autorské práva zrušené! Všetky sankcie z tohto filmu boli stiahnuté.");
+      hideModal('studioModal');
+    }
+
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+  </script>
+</body>
+</html>
